@@ -10,9 +10,8 @@ import numpy as np
 from Hyper_Ordinal_Pattern import Node_neighbors_Hyperedges,Hyper_Ordinal_Patterns_Of_Node2,delete_redundant_node
 
 
-
-
-def Node_HyperOP_kernel(Brain_hypernetwork1,Brain_hypernetwork2,v):
+#The node hyper-ordinal pattern (NHOP) kernel K_NHOP
+def Node_HyperOP_kernel(Brain_hypernetwork1,Brain_hypernetwork2,g,v):
 #Brain_hypernetwork1,Brain_hypernetwork2 are two brain hyper-networks
     print("Calculate NHOP kernel...")
     Net1vistnode,Net1visitedge,Net1incidence_matrix=Hyper_Ordinal_Patterns_Of_Node2(Brain_hypernetwork1,v)
@@ -43,33 +42,29 @@ def Node_HyperOP_kernel(Brain_hypernetwork1,Brain_hypernetwork2,v):
         Lap_net1_Fea=np.zeros(Brain_hypernetwork1.shape[0])
         Lap_net2_Fea=np.zeros(Brain_hypernetwork2.shape[0])
 
-
-    K_NHOP=np.linalg.norm(np.mean(Lap_net1_Fea,axis=1)-np.mean(Lap_net2_Fea,axis=1))**2
-
-
-    # K_NHOP=len(common_elements)
+    K_NHOP=np.sum(np.exp(-g*np.linalg.norm((Lap_net1_Fea-Lap_net2_Fea),axis=0)**2))
     
     return K_NHOP
 
 #Calculate ordinal pattern based hyper-network (OPHN) kernel
-def Ordinalpattern_for_HyperNet(Brain_hypernetwork1,Brain_hypernetwork2):
+def Ordinalpattern_for_HyperNet(Brain_hypernetwork1,Brain_hypernetwork2,g):
     print("Calculate OPHN kernel...")
     K_OPHN=0
     NodeNum=Brain_hypernetwork1.shape[0]
     for i in range(NodeNum):
-        K_NHOP=Node_HyperOP_kernel(Brain_hypernetwork1,Brain_hypernetwork2,i)
+        K_NHOP=Node_HyperOP_kernel(Brain_hypernetwork1,Brain_hypernetwork2,g,i)
         K_OPHN=K_OPHN+K_NHOP
     K_OPHN=K_OPHN/NodeNum
         
     return K_OPHN
 
 
-def OPHN_Kernel_For_BrainNet(Brain_hypernetwork):
+def OPHN_Kernel_For_BrainNet(Brain_hypernetwork,g):
     SubNum=Brain_hypernetwork.shape[2]
     OPHNKernel=np.zeros((SubNum,SubNum))
     for i in range(SubNum):
         for j in range(i,SubNum):
-            K_OPHN=Ordinalpattern_for_HyperNet(Brain_hypernetwork[:,:,i],Brain_hypernetwork[:,:,j])
+            K_OPHN=Ordinalpattern_for_HyperNet(Brain_hypernetwork[:,:,i],Brain_hypernetwork[:,:,j],g)
             OPHNKernel[i,j]=K_OPHN
     OPHNKernel=OPHNKernel+OPHNKernel.T
     print("Calculate OPHN kernel matrix...")
@@ -77,16 +72,20 @@ def OPHN_Kernel_For_BrainNet(Brain_hypernetwork):
     return OPHNKernel
 
 
-def NHOP_Kernel_For_BrainNet(Brain_hypernetwork,v):
+def NHOP_Kernel_For_BrainNet(Brain_hypernetwork,g,v):
     SubNum=Brain_hypernetwork.shape[2]
     NHOPKernel=np.zeros((SubNum,SubNum))
     for i in range(SubNum):
         for j in range(i,SubNum):
-            K_NHOP=Node_HyperOP_kernel(Brain_hypernetwork[:,:,i],Brain_hypernetwork[:,:,j],v)
+            K_NHOP=Node_HyperOP_kernel(Brain_hypernetwork[:,:,i],Brain_hypernetwork[:,:,j],g,v)
             NHOPKernel[i,j]=K_NHOP
     NHOPKernel=NHOPKernel+NHOPKernel.T
     print("Calculate NHOP kernel matrix...")
     
     return NHOPKernel
     
+
+
+
+
 
